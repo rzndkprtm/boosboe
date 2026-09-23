@@ -327,6 +327,7 @@
                 writer.WriteAttributeString("Drop", thisData("Drop").ToString())
                 writer.WriteAttributeString("StackOption", thisData("StackPosition").ToString())
                 writer.WriteAttributeString("ControlType", "Hand")
+                'writer.WriteAttributeString("Fullness", thisData("Fullness").ToString())
                 writer.WriteAttributeString("BottomRailColour", thisData("BottomHem").ToString())
                 writer.WriteAttributeString("Additional1", thisData("Supply").ToString())
                 writer.WriteAttributeString("ControlLength", thisData("ReturnLengthValue").ToString())
@@ -741,12 +742,13 @@
                     boeChainId = GetItemData("SELECT BoeId FROM Chains WHERE Id='" & chainId & "'")
                 End If
                 Dim controlLength As String = thisData("ControlLengthValue").ToString()
-                If controlName = "Wand" Then
-                    controlLength = thisData("WandLengthValue").ToString()
-                End If
-
                 If String.IsNullOrEmpty(kitId) Then Continue While
                 If String.IsNullOrEmpty(boeFabricId) Then Continue While
+
+                Dim stackPosition As String = String.Empty
+                If Not String.IsNullOrEmpty(thisData("StackPosition")) Then
+                    stackPosition = "Stack " & thisData("StackPosition").ToString()
+                End If
 
                 writer.WriteStartElement("OrderDetails")
                 writer.WriteAttributeString("OrddID", thisData("Id").ToString())
@@ -761,7 +763,7 @@
                 writer.WriteAttributeString("Width", thisData("Width").ToString())
                 writer.WriteAttributeString("Drop", thisData("Drop").ToString())
                 writer.WriteAttributeString("ControlType", controlName)
-                writer.WriteAttributeString("StackOption", thisData("StackPosition").ToString())
+                writer.WriteAttributeString("StackOption", stackPosition)
                 writer.WriteAttributeString("ControlLength", controlLength)
                 writer.WriteAttributeString("IDChain", boeChainId)
                 writer.WriteAttributeString("FabricID", boeFabricId)
@@ -1718,7 +1720,6 @@
                     writer.WriteEndElement()
                 End If
             End If
-
             If designName = "Outdoor" Then
                 Dim kitId As String = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "'")
 
@@ -1750,7 +1751,6 @@
                 writer.WriteAttributeString("Notes", thisData("Notes").ToString())
                 writer.WriteEndElement()
             End If
-
             If designName = "Skyline Shutter Express" Then
                 writer.WriteStartElement("OrderDetails")
                 writer.WriteAttributeString("OrddID", thisData("Id").ToString())
