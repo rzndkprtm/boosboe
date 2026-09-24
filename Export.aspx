@@ -97,8 +97,6 @@
                 End Using
             End Using
 
-            settingClass.RefreshSalesData(companyId)
-
             If type = "header" Then
                 Using thisConn As New SqlConnection(myConn)
                     Using thisCmd As New SqlCommand("sp_OrderHeaders_Download", thisConn)
