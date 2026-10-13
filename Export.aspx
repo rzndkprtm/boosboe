@@ -739,7 +739,7 @@
                 If controlName = "Chain" Then
                     boeChainId = GetItemData("SELECT BoeId FROM Chains WHERE Id='" & chainId & "'")
                 End If
-                Dim controlLength As String = thisData("ControlLengthValue").ToString()
+                Dim controlLength As String = thisData("WandLengthValue").ToString()
                 If String.IsNullOrEmpty(kitId) Then Continue While
                 If String.IsNullOrEmpty(boeFabricId) Then Continue While
 
