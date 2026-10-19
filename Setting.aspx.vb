@@ -221,7 +221,7 @@ Partial Class Setting
             mailBody &= "<br /><br /><br />"
             mailBody &= "Dear Valued Customer,"
             mailBody &= "<br /><br />"
-            mailBody &= "This order has been moved to <b>Pending Payment</b>.</u></b>."
+            mailBody &= "This order has been moved to <u><b>Pending Payment</b></u>."
             mailBody &= "<br /><br />"
             mailBody &= "Please note that if payment is received after a price change has taken effect, the order will be processed using our <b>latest pricing</b>."
             mailBody &= "<br /><br />"
