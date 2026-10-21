@@ -33,6 +33,9 @@ Partial Class Setting
         If thisAction = "resetproformaorder" Then
             ResetProformaOrder()
         End If
+        If thisAction = "journalclosed" Then
+            JournalClosed()
+        End If
         If thisAction = "shipment" Then
             If String.IsNullOrEmpty(Request.QueryString("OrdID")) Then
                 Exit Sub
@@ -310,6 +313,18 @@ Partial Class Setting
                     thisCmd.Parameters.AddWithValue("@Courier", courier)
                     thisCmd.Parameters.AddWithValue("@Status", status)
                     thisCmd.Parameters.AddWithValue("@InvoiceNumber", invNumber)
+                    thisConn.Open()
+                    thisCmd.ExecuteNonQuery()
+                End Using
+            End Using
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Protected Sub JournalClosed()
+        Try
+            Using thisConn As New SqlConnection(myConn)
+                Using thisCmd As SqlCommand = New SqlCommand("UPDATE Journals SET Status = 'Closed' WHERE CAST(CreatedDate AS DATE) = CAST(GETDATE() AS DATE) AND Status = 'Open';", thisConn)
                     thisConn.Open()
                     thisCmd.ExecuteNonQuery()
                 End Using
