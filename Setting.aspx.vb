@@ -1,4 +1,5 @@
-﻿Imports System.Data
+﻿Imports System.Activities.Statements
+Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Net
 Imports System.Net.Mail
@@ -35,6 +36,19 @@ Partial Class Setting
         End If
         If thisAction = "journalclosed" Then
             JournalClosed()
+        End If
+        If thisAction = "journalsummary" Then
+            JournalSummary()
+        End If
+        If thisAction = "journalreport" Then
+            JournalReport()
+        End If
+        If thisAction = "newticket" Then
+            If String.IsNullOrEmpty(Request.QueryString("ticketid")) Then
+                Exit Sub
+            End If
+            Dim ticketId As String = Request.QueryString("OrdID").ToString()
+            NewTicket(ticketId)
         End If
         If thisAction = "shipment" Then
             If String.IsNullOrEmpty(Request.QueryString("OrdID")) Then
@@ -329,6 +343,33 @@ Partial Class Setting
                     thisCmd.ExecuteNonQuery()
                 End Using
             End Using
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Protected Sub JournalSummary()
+        Try
+            Dim salesData As DataTable = settingClass.GetDataTable("SELECT Id FROM Logins WHERE RoleId=4 AND LevelId=2")
+            For i As Integer = 0 To salesData.Rows.Count - 1
+                Dim loginId As String = salesData.Rows(i)("Id").ToString()
+                settingClass.JournalSummary(loginId)
+            Next
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Protected Sub JournalReport()
+        Try
+            settingClass.JournalReport()
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Protected Sub NewTicket(ticketId As String)
+        Try
+            If String.IsNullOrEmpty(ticketId) Then Exit Sub
+
+            settingClass.NewTicket(ticketId)
         Catch ex As Exception
         End Try
     End Sub
