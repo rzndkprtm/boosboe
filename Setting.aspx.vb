@@ -43,13 +43,6 @@ Partial Class Setting
         If thisAction = "journalreport" Then
             JournalReport()
         End If
-        If thisAction = "newticket" Then
-            If String.IsNullOrEmpty(Request.QueryString("ticketid")) Then
-                Exit Sub
-            End If
-            Dim ticketId As String = Request.QueryString("ticketid").ToString()
-            NewTicket(ticketId)
-        End If
         If thisAction = "shipment" Then
             If String.IsNullOrEmpty(Request.QueryString("OrdID")) Then
                 Exit Sub
@@ -361,15 +354,6 @@ Partial Class Setting
     Protected Sub JournalReport()
         Try
             settingClass.JournalReport()
-        Catch ex As Exception
-        End Try
-    End Sub
-
-    Protected Sub NewTicket(ticketId As String)
-        Try
-            If String.IsNullOrEmpty(ticketId) Then Exit Sub
-
-            settingClass.NewTicket(ticketId)
         Catch ex As Exception
         End Try
     End Sub
