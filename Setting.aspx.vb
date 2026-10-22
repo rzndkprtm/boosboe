@@ -47,7 +47,7 @@ Partial Class Setting
             If String.IsNullOrEmpty(Request.QueryString("ticketid")) Then
                 Exit Sub
             End If
-            Dim ticketId As String = Request.QueryString("OrdID").ToString()
+            Dim ticketId As String = Request.QueryString("ticketid").ToString()
             NewTicket(ticketId)
         End If
         If thisAction = "shipment" Then
