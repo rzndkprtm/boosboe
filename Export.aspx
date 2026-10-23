@@ -823,7 +823,7 @@
                         kitId = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -895,7 +895,7 @@
                         kitIdB = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -978,7 +978,7 @@
                         kitIdB = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "' AND BlindStatus='End'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -1050,7 +1050,7 @@
                         kitIdC = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "' AND BlindStatus='End'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -1140,7 +1140,7 @@
                         kitIdB = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "' AND BlindStatus='End'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -1224,7 +1224,7 @@
                         kitIdC = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "' AND BlindStatus='End'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -1329,7 +1329,7 @@
                         kitIdD = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "' AND BlindStatus='End'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -1447,7 +1447,7 @@
                         kitIdD = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "' AND BlindStatus='End'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
@@ -1581,7 +1581,7 @@
                         kitIdF = GetItemData("SELECT KitId FROM ProductKits WHERE ProductId='" & productId & "' AND Name='" & kitName & "' AND BlindStatus='End'")
                     End If
 
-                    If tubeName = "Acmeda 49mm" AndAlso controlName = "Chain" Then
+                    If controlName = "Chain" AndAlso (tubeName = "Acmeda 43mm" OrElse tubeName = "Acmeda 49mm") Then
                         kitName = productName
                         If springAssist = "Yes" Then
                             kitName = String.Format("{0} (Spring Assist)", productName)
