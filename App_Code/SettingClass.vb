@@ -369,9 +369,9 @@ Public Class SettingClass
             Dim mailEnableSSL As Boolean = mailData("EnableSSL")
 
             Dim params As New List(Of SqlParameter) From {
-            New SqlParameter("@LoginId", salesId)
-        }
-            Dim journalData As DataTable = GetDataTableSP("sp_Journals_Summary", params)
+                New SqlParameter("@LoginId", salesId)
+            }
+            Dim journalData As DataTable = GetDataTableSP("sp_Journals_Summary_Group", params)
             If journalData.Rows.Count = 0 Then Exit Sub
 
             Dim salesName As String = GetItemData("SELECT FullName FROM Logins WHERE Id='" & salesId & "'")
@@ -481,7 +481,7 @@ Public Class SettingClass
             Dim mailDefaultCredentials As Boolean = mailData("DefaultCredentials")
             Dim mailEnableSSL As Boolean = mailData("EnableSSL")
 
-            Dim journalData As DataTable = GetDataTableSP("sp_Journals_Report", Nothing)
+            Dim journalData As DataTable = GetDataTableSP("sp_Journals_Report_Group", Nothing)
             If journalData.Rows.Count = 0 Then Exit Sub
 
             Dim mailBody As String = String.Empty
