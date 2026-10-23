@@ -1,7 +1,9 @@
 ﻿Imports System.Data
 Imports System.Data.SqlClient
+Imports System.IO
 Imports System.Net
 Imports System.Net.Mail
+Imports OfficeOpenXml
 
 Public Class SettingClass
     Dim myConn As String = ConfigurationManager.ConnectionStrings("DefaultConnection").ConnectionString
@@ -339,6 +341,95 @@ Public Class SettingClass
         End Try
     End Sub
 
+    Public Function JournalSummary_Excel(salesId As Integer) As Byte()
+        Try
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial
+
+            Dim params As New List(Of SqlParameter) From {
+                New SqlParameter("@LoginId", salesId)
+            }
+            Dim dt As DataTable = GetDataTableSP("sp_Journals_Summary", params)
+
+            Using package As New ExcelPackage()
+                Dim ws = package.Workbook.Worksheets.Add("JURNAL SUMMARY")
+
+                ws.Cells(1, 1).Value = "NO"
+                ws.Cells(1, 2).Value = "JOURNAL DATE"
+                ws.Cells(1, 3).Value = "SALES NAME"
+                ws.Cells(1, 4).Value = "CUSTOMER NAME"
+                ws.Cells(1, 5).Value = "ACTIVITY"
+                ws.Cells(1, 6).Value = "DESCRIPTION"
+
+                Using rng = ws.Cells(1, 1, 1, 6)
+                    rng.Style.Font.Bold = True
+                End Using
+
+                Dim row As Integer = 2
+                For Each dr As DataRow In dt.Rows
+                    ws.Cells(row, 1).Value = row - 1
+                    If Not IsDBNull(dr("CreatedDate")) Then
+                        ws.Cells(row, 2).Value = Convert.ToDateTime(dr("CreatedDate"))
+                        ws.Cells(row, 2).Style.Numberformat.Format = "dd MMM yyyy"
+                    End If
+                    ws.Cells(row, 3).Value = dr("CreatedByFull").ToString()
+                    ws.Cells(row, 4).Value = dr("Activity").ToString()
+                    ws.Cells(row, 5).Value = dr("CustomerName").ToString()
+                    ws.Cells(row, 6).Value = dr("Description").ToString()
+
+                    row += 1
+                Next
+                ws.Cells.AutoFitColumns()
+
+                Return package.GetAsByteArray()
+            End Using
+        Catch ex As Exception
+            Return New Byte() {}
+        End Try
+    End Function
+
+    Public Function JournalReport_Excel() As Byte()
+        Try
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial
+
+            Dim dt As DataTable = GetDataTableSP("sp_Journals_Report", Nothing)
+
+            Using package As New ExcelPackage()
+                Dim ws = package.Workbook.Worksheets.Add("JURNAL REPORT")
+
+                ws.Cells(1, 1).Value = "NO"
+                ws.Cells(1, 2).Value = "JOURNAL DATE"
+                ws.Cells(1, 3).Value = "SALES NAME"
+                ws.Cells(1, 4).Value = "CUSTOMER NAME"
+                ws.Cells(1, 5).Value = "ACTIVITY"
+                ws.Cells(1, 6).Value = "DESCRIPTION"
+
+                Using rng = ws.Cells(1, 1, 1, 6)
+                    rng.Style.Font.Bold = True
+                End Using
+
+                Dim row As Integer = 2
+                For Each dr As DataRow In dt.Rows
+                    ws.Cells(row, 1).Value = row - 1
+                    If Not IsDBNull(dr("CreatedDate")) Then
+                        ws.Cells(row, 2).Value = Convert.ToDateTime(dr("CreatedDate"))
+                        ws.Cells(row, 2).Style.Numberformat.Format = "dd MMM yyyy"
+                    End If
+                    ws.Cells(row, 3).Value = dr("CreatedByFull").ToString()
+                    ws.Cells(row, 4).Value = dr("Activity").ToString()
+                    ws.Cells(row, 5).Value = dr("CustomerName").ToString()
+                    ws.Cells(row, 6).Value = dr("Description").ToString()
+
+                    row += 1
+                Next
+                ws.Cells.AutoFitColumns()
+
+                Return package.GetAsByteArray()
+            End Using
+        Catch ex As Exception
+            Return New Byte() {}
+        End Try
+    End Function
+
 
     ' MAILING
     Public Sub JournalSummary(salesId As String)
@@ -392,7 +483,7 @@ Public Class SettingClass
             mailBody &= "</div>"
             mailBody &= "<br />"
 
-            mailBody &= "<table style='border-collapse:collapse; width:60%; font-family:Cambria; font-size:16px;'>"
+            mailBody &= "<table style='border-collapse:collapse; width:100%; font-family:Cambria; font-size:16px;'>"
             mailBody &= "<tr style='background-color:#00B0F0; color:black; font-weight:bold; text-align:center;'>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>No</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Journal Date</th>"
@@ -438,8 +529,12 @@ Public Class SettingClass
                 Next
             End If
 
-            myMail.Body = mailBody
             myMail.IsBodyHtml = True
+            myMail.Body = mailBody
+
+            Dim attachment As Byte() = JournalSummary_Excel(salesId)
+            myMail.Attachments.Add(New Attachment(New MemoryStream(attachment), "JOURNAL SUMMARY.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+
             Dim smtpClient As New SmtpClient()
             smtpClient.Host = mailHost
             smtpClient.Port = mailPort
@@ -498,7 +593,7 @@ Public Class SettingClass
             mailBody &= "</div>"
             mailBody &= "<br />"
 
-            mailBody &= "<table style='border-collapse:collapse; width:60%; font-family:Cambria; font-size:16px;'>"
+            mailBody &= "<table style='border-collapse:collapse; width:100%; font-family:Cambria; font-size:16px;'>"
             mailBody &= "<tr style='background-color:#00B0F0; color:black; font-weight:bold; text-align:center;'>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>No</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Journal Date</th>"
@@ -546,8 +641,12 @@ Public Class SettingClass
                 Next
             End If
 
-            myMail.Body = mailBody
             myMail.IsBodyHtml = True
+            myMail.Body = mailBody
+
+            Dim attachment As Byte() = JournalReport_Excel()
+            myMail.Attachments.Add(New Attachment(New MemoryStream(attachment), "JOURNAL REPORT.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+
             Dim smtpClient As New SmtpClient()
             smtpClient.Host = mailHost
             smtpClient.Port = mailPort
