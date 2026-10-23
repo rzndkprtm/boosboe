@@ -371,7 +371,7 @@ Public Class SettingClass
             Dim params As New List(Of SqlParameter) From {
             New SqlParameter("@LoginId", salesId)
         }
-            Dim journalData As DataTable = GetDataTableSP("sp_Journals_Reminder", params)
+            Dim journalData As DataTable = GetDataTableSP("sp_Journals_Summary", params)
             If journalData.Rows.Count = 0 Then Exit Sub
 
             Dim salesName As String = GetItemData("SELECT FullName FROM Logins WHERE Id='" & salesId & "'")
@@ -396,6 +396,7 @@ Public Class SettingClass
             mailBody &= "<tr style='background-color:#00B0F0; color:black; font-weight:bold; text-align:center;'>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>No</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Journal Date</th>"
+            mailBody &= "<th style='border:1px solid #000; padding:6px;'>Activity</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Customer</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Total Customer</th>"
             mailBody &= "</tr>"
@@ -405,6 +406,7 @@ Public Class SettingClass
                 mailBody &= "<tr>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & no & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & Convert.ToDateTime(journalData.Rows(i)("JournalDate")).ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & "</td>"
+                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Activity").ToString() & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("CustomerName").ToString() & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Total").ToString() & "</td>"
                 mailBody &= "</tr>"
@@ -501,6 +503,7 @@ Public Class SettingClass
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>No</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Journal Date</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Sales Name</th>"
+            mailBody &= "<th style='border:1px solid #000; padding:6px;'>Activity</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Customer</th>"
             mailBody &= "<th style='border:1px solid #000; padding:6px;'>Total Customer</th>"
             mailBody &= "</tr>"
@@ -511,6 +514,7 @@ Public Class SettingClass
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & no & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & Convert.ToDateTime(journalData.Rows(i)("JournalDate")).ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("FullName").ToString() & "</td>"
+                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Activity").ToString() & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("CustomerName").ToString() & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Total").ToString() & "</td>"
                 mailBody &= "</tr>"
