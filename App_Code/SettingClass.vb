@@ -355,12 +355,11 @@ Public Class SettingClass
 
                 ws.Cells(1, 1).Value = "NO"
                 ws.Cells(1, 2).Value = "JOURNAL DATE"
-                ws.Cells(1, 3).Value = "SALES NAME"
-                ws.Cells(1, 4).Value = "CUSTOMER NAME"
-                ws.Cells(1, 5).Value = "ACTIVITY"
-                ws.Cells(1, 6).Value = "DESCRIPTION"
+                ws.Cells(1, 3).Value = "CUSTOMER NAME"
+                ws.Cells(1, 4).Value = "ACTIVITY"
+                ws.Cells(1, 5).Value = "DESCRIPTION"
 
-                Using rng = ws.Cells(1, 1, 1, 6)
+                Using rng = ws.Cells(1, 1, 1, 5)
                     rng.Style.Font.Bold = True
                 End Using
 
@@ -371,10 +370,9 @@ Public Class SettingClass
                         ws.Cells(row, 2).Value = Convert.ToDateTime(dr("CreatedDate"))
                         ws.Cells(row, 2).Style.Numberformat.Format = "dd MMM yyyy"
                     End If
-                    ws.Cells(row, 3).Value = dr("CreatedByFull").ToString()
-                    ws.Cells(row, 4).Value = dr("Activity").ToString()
-                    ws.Cells(row, 5).Value = dr("CustomerName").ToString()
-                    ws.Cells(row, 6).Value = dr("Description").ToString()
+                    ws.Cells(row, 3).Value = dr("Activity").ToString()
+                    ws.Cells(row, 4).Value = dr("CustomerName").ToString()
+                    ws.Cells(row, 5).Value = dr("Description").ToString()
 
                     row += 1
                 Next
