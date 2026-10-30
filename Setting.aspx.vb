@@ -330,7 +330,7 @@ Partial Class Setting
     Protected Sub JournalClosed()
         Try
             Using thisConn As New SqlConnection(myConn)
-                Using thisCmd As SqlCommand = New SqlCommand("UPDATE Journals SET Status = 'Closed' WHERE CAST(CreatedDate AS DATE) = CAST(GETDATE() AS DATE) AND Status = 'Open';", thisConn)
+                Using thisCmd As New SqlCommand("UPDATE Journals SET Status = 'Closed' WHERE CreatedDate >= DATEADD(DAY, -(DATEDIFF(DAY, '19000101', GETDATE()) % 7), CAST(GETDATE() AS DATE)) AND CreatedDate < DATEADD(DAY, 5 - (DATEDIFF(DAY, '19000101', GETDATE()) % 7), CAST(GETDATE() AS DATE)) AND Status = 'Open';", thisConn)
                     thisConn.Open()
                     thisCmd.ExecuteNonQuery()
                 End Using
