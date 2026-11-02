@@ -3,7 +3,8 @@ Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Net
 Imports System.Net.Mail
-Imports OfficeOpenXml
+Imports iTextSharp.text
+Imports iTextSharp.text.pdf
 
 Public Class SettingClass
     Dim myConn As String = ConfigurationManager.ConnectionStrings("DefaultConnection").ConnectionString
@@ -341,6 +342,237 @@ Public Class SettingClass
         End Try
     End Sub
 
+    Public Function JournalSummary_PDF(salesId As String, startDate As Date, endDate As Date) As Byte()
+        Try
+            Using ms As New MemoryStream()
+                Dim salesName As String = "ALL SALES"
+
+                If Not String.IsNullOrWhiteSpace(salesId) Then
+                    salesName = GetItemData("SELECT FullName FROM Logins WHERE Id='" & salesId.Replace("'", "''") & "'")
+                    If String.IsNullOrWhiteSpace(salesName) Then salesName = "ALL SALES"
+                End If
+
+                Dim pageTitle As String = "JOURNAL SUMMARY"
+                Dim doc As New Document(PageSize.A4.Rotate(), 25, 25, 125, 55)
+                Dim writer As PdfWriter = PdfWriter.GetInstance(doc, ms)
+
+                Dim pageEvent As New JournalEvents() With {
+                    .PageTitle = pageTitle,
+                    .PageSales = salesName,
+                    .PageStartDate = startDate,
+                    .PageEndDate = endDate
+                }
+
+                writer.PageEvent = pageEvent
+                doc.Open()
+
+                Dim table As New PdfPTable(4)
+                table.WidthPercentage = 100
+                table.SetWidths(New Single() {0.14F, 0.15F, 0.33F, 0.38F})
+                table.HeaderRows = 1
+                table.SplitLate = False
+                table.KeepTogether = False
+                table.SpacingBefore = 5
+                table.SpacingAfter = 5
+
+                Dim headerFont As New Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.WHITE)
+                Dim bodyFont As New Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, New BaseColor(51, 65, 85))
+                Dim emptyFont As New Font(Font.FontFamily.HELVETICA, 9, Font.ITALIC, New BaseColor(107, 114, 128))
+                Dim headerBackground As New BaseColor(36, 52, 71)
+                Dim alternateBackground As New BaseColor(248, 250, 252)
+                Dim borderColor As New BaseColor(226, 232, 240)
+
+                Dim headers As String() = {"JOURNAL DATE", "ACTIVITY", "CUSTOMER NAME", "DESCRIPTION"}
+
+                For Each header As String In headers
+                    Dim cell As New PdfPCell(New Phrase(header, headerFont))
+                    cell.BackgroundColor = headerBackground
+                    cell.HorizontalAlignment = Element.ALIGN_CENTER
+                    cell.VerticalAlignment = Element.ALIGN_MIDDLE
+                    cell.PaddingTop = 9
+                    cell.PaddingBottom = 9
+                    cell.PaddingLeft = 5
+                    cell.PaddingRight = 5
+                    cell.BorderColor = borderColor
+                    cell.BorderWidth = 0.5F
+                    cell.Border = Rectangle.BOX
+                    table.AddCell(cell)
+                Next
+
+                Dim params As New List(Of SqlParameter) From {
+                    New SqlParameter("@LoginId", If(String.IsNullOrWhiteSpace(salesId), CType(DBNull.Value, Object), salesId))
+                }
+                Dim thisData As DataTable = GetDataTableSP("sp_Journals_Summary", params)
+
+                If thisData.Rows.Count > 0 Then
+                    For i As Integer = 0 To thisData.Rows.Count - 1
+                        Dim row As DataRow = thisData.Rows(i)
+
+                        Dim createdDate As String = Convert.ToDateTime(row("CreatedDate")).ToString("dd MMM yyyy")
+                        Dim activity As String = If(IsDBNull(row("Activity")), "", row("Activity").ToString())
+                        Dim customerName As String = If(IsDBNull(row("CustomerName")), "", row("CustomerName").ToString())
+                        Dim description As String = If(IsDBNull(row("Description")), "", row("Description").ToString())
+
+                        Dim rowBackground As BaseColor = If(i Mod 2 = 0, BaseColor.WHITE, alternateBackground)
+                        Dim values As String() = {createdDate, activity, customerName, description}
+
+                        For col As Integer = 0 To values.Length - 1
+                            Dim cell As New PdfPCell(New Phrase(If(String.IsNullOrWhiteSpace(values(col)), "-", values(col)), bodyFont))
+                            cell.BackgroundColor = rowBackground
+                            cell.VerticalAlignment = Element.ALIGN_MIDDLE
+                            cell.PaddingTop = 7
+                            cell.PaddingBottom = 7
+                            cell.PaddingLeft = 6
+                            cell.PaddingRight = 6
+                            cell.BorderColor = borderColor
+                            cell.BorderWidth = 0.5F
+                            cell.Border = Rectangle.BOX
+                            If col = 0 OrElse col = 1 Then
+                                cell.HorizontalAlignment = Element.ALIGN_CENTER
+                            Else
+                                cell.HorizontalAlignment = Element.ALIGN_LEFT
+                            End If
+
+                            table.AddCell(cell)
+                        Next
+                    Next
+                Else
+                    Dim emptyCell As New PdfPCell(New Phrase("No journal records found for the selected period.", emptyFont))
+                    emptyCell.Colspan = 5
+                    emptyCell.HorizontalAlignment = Element.ALIGN_CENTER
+                    emptyCell.VerticalAlignment = Element.ALIGN_MIDDLE
+                    emptyCell.PaddingTop = 18
+                    emptyCell.PaddingBottom = 18
+                    emptyCell.BackgroundColor = alternateBackground
+                    emptyCell.BorderColor = borderColor
+                    emptyCell.BorderWidth = 0.5F
+                    table.AddCell(emptyCell)
+                End If
+
+                doc.Add(table)
+                doc.Close()
+
+                Return ms.ToArray()
+            End Using
+        Catch ex As Exception
+            System.Diagnostics.Debug.WriteLine("JournalSummary_PDF Error: " & ex.ToString())
+        Return New Byte() {}
+        End Try
+    End Function
+
+    Public Function JournalReport_PDF(startDate As Date, endDate As Date) As Byte()
+        Try
+            Using ms As New MemoryStream()
+                Dim salesName As String = "ALL SALES"
+
+                Dim pageTitle As String = "JOURNAL REPORT"
+                Dim doc As New Document(PageSize.A4.Rotate(), 25, 25, 125, 55)
+                Dim writer As PdfWriter = PdfWriter.GetInstance(doc, ms)
+
+                Dim pageEvent As New JournalEvents() With {
+                    .PageTitle = pageTitle,
+                    .PageSales = salesName,
+                    .PageStartDate = startDate,
+                    .PageEndDate = endDate
+                }
+
+                writer.PageEvent = pageEvent
+                doc.Open()
+
+                Dim table As New PdfPTable(5)
+                table.WidthPercentage = 100
+                table.SetWidths(New Single() {0.2F, 0.14F, 0.15F, 0.23F, 0.28F})
+                table.HeaderRows = 1
+                table.SplitLate = False
+                table.KeepTogether = False
+                table.SpacingBefore = 5
+                table.SpacingAfter = 5
+
+                Dim headerFont As New Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.WHITE)
+                Dim bodyFont As New Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, New BaseColor(51, 65, 85))
+                Dim emptyFont As New Font(Font.FontFamily.HELVETICA, 9, Font.ITALIC, New BaseColor(107, 114, 128))
+                Dim headerBackground As New BaseColor(36, 52, 71)
+                Dim alternateBackground As New BaseColor(248, 250, 252)
+                Dim borderColor As New BaseColor(226, 232, 240)
+
+                Dim headers As String() = {"SALES NAME", "JOURNAL DATE", "ACTIVITY", "CUSTOMER NAME", "DESCRIPTION"}
+
+                For Each header As String In headers
+                    Dim cell As New PdfPCell(New Phrase(header, headerFont))
+                    cell.BackgroundColor = headerBackground
+                    cell.HorizontalAlignment = Element.ALIGN_CENTER
+                    cell.VerticalAlignment = Element.ALIGN_MIDDLE
+                    cell.PaddingTop = 9
+                    cell.PaddingBottom = 9
+                    cell.PaddingLeft = 5
+                    cell.PaddingRight = 5
+                    cell.BorderColor = borderColor
+                    cell.BorderWidth = 0.5F
+                    cell.Border = Rectangle.BOX
+                    table.AddCell(cell)
+                Next
+
+                Dim thisData As DataTable = GetDataTableSP("sp_Journals_Report", Nothing)
+
+                If thisData.Rows.Count > 0 Then
+                    For i As Integer = 0 To thisData.Rows.Count - 1
+                        Dim row As DataRow = thisData.Rows(i)
+
+                        Dim createdBy As String = If(IsDBNull(row("CreatedByFull")), "", row("CreatedByFull").ToString())
+                        Dim createdDate As String = Convert.ToDateTime(row("CreatedDate")).ToString("dd MMM yyyy")
+                        Dim activity As String = If(IsDBNull(row("Activity")), "", row("Activity").ToString())
+                        Dim customerName As String = If(IsDBNull(row("CustomerName")), "", row("CustomerName").ToString())
+                        Dim description As String = If(IsDBNull(row("Description")), "", row("Description").ToString())
+
+                        Dim rowBackground As BaseColor = If(i Mod 2 = 0, BaseColor.WHITE, alternateBackground)
+                        Dim values As String() = {createdBy, createdDate, activity, customerName, description}
+
+                        For col As Integer = 0 To values.Length - 1
+                            Dim cell As New PdfPCell(New Phrase(If(String.IsNullOrWhiteSpace(values(col)), "-", values(col)), bodyFont))
+                            cell.BackgroundColor = rowBackground
+                            cell.VerticalAlignment = Element.ALIGN_MIDDLE
+                            cell.PaddingTop = 7
+                            cell.PaddingBottom = 7
+                            cell.PaddingLeft = 6
+                            cell.PaddingRight = 6
+                            cell.BorderColor = borderColor
+                            cell.BorderWidth = 0.5F
+                            cell.Border = Rectangle.BOX
+
+                            If col = 0 OrElse col = 1 OrElse col = 2 Then
+                                cell.HorizontalAlignment = Element.ALIGN_CENTER
+                            Else
+                                cell.HorizontalAlignment = Element.ALIGN_LEFT
+                            End If
+
+                            table.AddCell(cell)
+                        Next
+                    Next
+                Else
+                    Dim emptyCell As New PdfPCell(New Phrase("No journal records found for the selected period.", emptyFont))
+                    emptyCell.Colspan = 5
+                    emptyCell.HorizontalAlignment = Element.ALIGN_CENTER
+                    emptyCell.VerticalAlignment = Element.ALIGN_MIDDLE
+                    emptyCell.PaddingTop = 18
+                    emptyCell.PaddingBottom = 18
+                    emptyCell.BackgroundColor = alternateBackground
+                    emptyCell.BorderColor = borderColor
+                    emptyCell.BorderWidth = 0.5F
+                    table.AddCell(emptyCell)
+                End If
+
+                doc.Add(table)
+                doc.Close()
+
+                Return ms.ToArray()
+            End Using
+        Catch ex As Exception
+            System.Diagnostics.Debug.WriteLine("JournalSummary_PDF Error: " & ex.ToString())
+            Return New Byte() {}
+        End Try
+    End Function
+
+
     ' MAILING
     Public Sub JournalSummary(salesId As String)
         Try
@@ -408,7 +640,7 @@ Public Class SettingClass
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & no & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & Convert.ToDateTime(journalData.Rows(i)("JournalDate")).ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Activity").ToString() & "</td>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("CustomerName").ToString() & "</td>"
+                mailBody &= "<td style='border:1px solid #000; padding:6px;'>" & journalData.Rows(i)("CustomerName").ToString() & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Total").ToString() & "</td>"
                 mailBody &= "</tr>"
                 no += 1
@@ -441,6 +673,12 @@ Public Class SettingClass
 
             myMail.IsBodyHtml = True
             myMail.Body = mailBody
+
+            Dim pdfBytes As Byte() = JournalSummary_PDF(salesId, startDate, endDate)
+
+            Dim ms As New MemoryStream(pdfBytes)
+            Dim attach As New Attachment(ms, "JOURNAL SUMMARY - " & salesName.ToUpper() & ".pdf", "application/pdf")
+            myMail.Attachments.Add(attach)
 
             Dim smtpClient As New SmtpClient()
             smtpClient.Host = mailHost
@@ -517,7 +755,7 @@ Public Class SettingClass
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & Convert.ToDateTime(journalData.Rows(i)("JournalDate")).ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("FullName").ToString() & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Activity").ToString() & "</td>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("CustomerName").ToString() & "</td>"
+                mailBody &= "<td style='border:1px solid #000; padding:6px;'>" & journalData.Rows(i)("CustomerName").ToString() & "</td>"
                 mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Total").ToString() & "</td>"
                 mailBody &= "</tr>"
                 no += 1
@@ -551,6 +789,12 @@ Public Class SettingClass
             myMail.IsBodyHtml = True
             myMail.Body = mailBody
 
+            Dim pdfBytes As Byte() = JournalReport_PDF(startDate, endDate)
+
+            Dim ms As New MemoryStream(pdfBytes)
+            Dim attach As New Attachment(ms, "JOURNAL REPORT.pdf", "application/pdf")
+            myMail.Attachments.Add(attach)
+
             Dim smtpClient As New SmtpClient()
             smtpClient.Host = mailHost
             smtpClient.Port = mailPort
@@ -568,5 +812,136 @@ Public Class SettingClass
             smtpClient.Send(myMail)
         Catch ex As Exception
         End Try
+    End Sub
+End Class
+
+Public Class JournalEvents
+    Inherits PdfPageEventHelper
+
+    Public PageTitle As String
+    Public PageSales As String
+    Public PageStartDate As Date?
+    Public PageEndDate As Date?
+
+    Public Overrides Sub OnEndPage(writer As PdfWriter, document As Document)
+        Dim cb As PdfContentByte = writer.DirectContent
+
+        Dim titleFont As New Font(Font.FontFamily.HELVETICA, 16, Font.BOLD, New BaseColor(36, 52, 71))
+        Dim labelFont As New Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, New BaseColor(107, 114, 128))
+        Dim valueFont As New Font(Font.FontFamily.HELVETICA, 9, Font.BOLD, New BaseColor(31, 41, 55))
+        Dim smallFont As New Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, New BaseColor(107, 114, 128))
+        Dim footerFont As New Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, New BaseColor(107, 114, 128))
+
+        Dim leftMargin As Single = document.LeftMargin
+        Dim rightMargin As Single = document.PageSize.Width - document.RightMargin
+        Dim contentWidth As Single = rightMargin - leftMargin
+
+        ' HEADER TITLE
+        Dim titleTable As New PdfPTable(2)
+        titleTable.TotalWidth = contentWidth
+        titleTable.LockedWidth = True
+        titleTable.SetWidths(New Single() {0.68F, 0.32F})
+
+        Dim titleCell As New PdfPCell(New Phrase(If(String.IsNullOrWhiteSpace(PageTitle), "REPORT", PageTitle), titleFont))
+        titleCell.Border = Rectangle.NO_BORDER
+        titleCell.HorizontalAlignment = Element.ALIGN_LEFT
+        titleCell.VerticalAlignment = Element.ALIGN_MIDDLE
+        titleCell.PaddingBottom = 5
+        titleTable.AddCell(titleCell)
+
+        Dim generatedCell As New PdfPCell(New Phrase("GENERATED ON" & vbLf & DateTime.Now.ToString("dd MMM yyyy HH:mm"), smallFont))
+        generatedCell.Border = Rectangle.NO_BORDER
+        generatedCell.HorizontalAlignment = Element.ALIGN_RIGHT
+        generatedCell.VerticalAlignment = Element.ALIGN_MIDDLE
+        generatedCell.PaddingBottom = 5
+        titleTable.AddCell(generatedCell)
+
+        titleTable.WriteSelectedRows(0, -1, leftMargin, document.PageSize.Height - 22, cb)
+
+        ' HEADER DIVIDER
+        Dim lineY As Single = document.PageSize.Height - 57
+
+        cb.SaveState()
+        cb.SetColorStroke(New BaseColor(37, 99, 235))
+        cb.SetLineWidth(2.0F)
+        cb.MoveTo(leftMargin, lineY)
+        cb.LineTo(rightMargin, lineY)
+        cb.Stroke()
+        cb.RestoreState()
+
+        ' COMPANY AND REPORT PERIOD
+        Dim infoTable As New PdfPTable(2)
+        infoTable.TotalWidth = contentWidth
+        infoTable.LockedWidth = True
+        infoTable.SetWidths(New Single() {0.5F, 0.5F})
+
+        Dim companyCell As New PdfPCell()
+        companyCell.Border = Rectangle.NO_BORDER
+        companyCell.HorizontalAlignment = Element.ALIGN_LEFT
+        companyCell.VerticalAlignment = Element.ALIGN_TOP
+        companyCell.PaddingTop = 9
+        companyCell.PaddingBottom = 5
+        companyCell.PaddingLeft = 0
+        companyCell.PaddingRight = 10
+        companyCell.AddElement(New Paragraph("SALES NAME", labelFont))
+        companyCell.AddElement(New Paragraph(If(String.IsNullOrWhiteSpace(PageSales), "ALL COMPANIES", PageSales), valueFont))
+        infoTable.AddCell(companyCell)
+
+        Dim periodText As String = "All Dates"
+
+        If PageStartDate.HasValue AndAlso PageEndDate.HasValue Then
+            periodText = PageStartDate.Value.ToString("dd MMM yyyy") & " - " & PageEndDate.Value.ToString("dd MMM yyyy")
+        ElseIf PageStartDate.HasValue Then
+            periodText = "From " & PageStartDate.Value.ToString("dd MMM yyyy")
+        ElseIf PageEndDate.HasValue Then
+            periodText = "Until " & PageEndDate.Value.ToString("dd MMM yyyy")
+        End If
+
+        Dim periodCell As New PdfPCell()
+        periodCell.Border = Rectangle.NO_BORDER
+        periodCell.HorizontalAlignment = Element.ALIGN_LEFT
+        periodCell.VerticalAlignment = Element.ALIGN_TOP
+        periodCell.PaddingTop = 9
+        periodCell.PaddingBottom = 5
+        periodCell.PaddingLeft = 0
+        periodCell.PaddingRight = 10
+        periodCell.AddElement(New Paragraph("JOURNAL PERIOD", labelFont))
+        periodCell.AddElement(New Paragraph(periodText, valueFont))
+        infoTable.AddCell(periodCell)
+
+        infoTable.WriteSelectedRows(0, -1, leftMargin, lineY - 3, cb)
+
+        ' FOOTER DIVIDER
+        Dim footerY As Single = document.BottomMargin - 5
+
+        cb.SaveState()
+        cb.SetColorStroke(New BaseColor(226, 232, 240))
+        cb.SetLineWidth(0.7F)
+        cb.MoveTo(leftMargin, footerY + 15)
+        cb.LineTo(rightMargin, footerY + 15)
+        cb.Stroke()
+        cb.RestoreState()
+
+        ' FOOTER
+        Dim footerTable As New PdfPTable(2)
+        footerTable.TotalWidth = contentWidth
+        footerTable.LockedWidth = True
+        footerTable.SetWidths(New Single() {0.75F, 0.25F})
+
+        Dim leftFooterCell As New PdfPCell(New Phrase("CONFIDENTIAL  |  All information within this report is private and confidential.", footerFont))
+        leftFooterCell.Border = Rectangle.NO_BORDER
+        leftFooterCell.HorizontalAlignment = Element.ALIGN_LEFT
+        leftFooterCell.VerticalAlignment = Element.ALIGN_MIDDLE
+        leftFooterCell.PaddingTop = 5
+        footerTable.AddCell(leftFooterCell)
+
+        Dim rightFooterCell As New PdfPCell(New Phrase("Page " & writer.PageNumber, New Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, New BaseColor(36, 52, 71))))
+        rightFooterCell.Border = Rectangle.NO_BORDER
+        rightFooterCell.HorizontalAlignment = Element.ALIGN_RIGHT
+        rightFooterCell.VerticalAlignment = Element.ALIGN_MIDDLE
+        rightFooterCell.PaddingTop = 5
+        footerTable.AddCell(rightFooterCell)
+
+        footerTable.WriteSelectedRows(0, -1, leftMargin, footerY + 10, cb)
     End Sub
 End Class
