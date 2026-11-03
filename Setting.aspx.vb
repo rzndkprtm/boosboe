@@ -42,6 +42,14 @@ Partial Class Setting
         If thisAction = "journalreport" Then
             JournalReport()
         End If
+        If thisAction = "fabricstock" Then
+            If String.IsNullOrEmpty(Request.QueryString("invid")) Then
+                Exit Sub
+            End If
+            Dim invId As String = Request.QueryString("invid").ToString()
+
+            FabricStock(invId)
+        End If
         If thisAction = "shipment" Then
             If String.IsNullOrEmpty(Request.QueryString("OrdID")) Then
                 Exit Sub
@@ -353,6 +361,15 @@ Partial Class Setting
     Protected Sub JournalReport()
         Try
             settingClass.JournalReport()
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Protected Sub FabricStock(inventoryId As String)
+        Try
+            If String.IsNullOrEmpty(inventoryId) Then
+
+            End If
         Catch ex As Exception
         End Try
     End Sub
