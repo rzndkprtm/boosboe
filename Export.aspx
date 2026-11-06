@@ -760,7 +760,7 @@
                 writer.WriteAttributeString("IDHK", kitId)
                 writer.WriteAttributeString("Width", thisData("Width").ToString())
                 writer.WriteAttributeString("Drop", thisData("Drop").ToString())
-                writer.WriteAttributeString("ControlType", controlName)
+                writer.WriteAttributeString("ControlType", "Wand")
                 writer.WriteAttributeString("StackOption", stackPosition)
                 writer.WriteAttributeString("ControlLength", controlLength)
                 writer.WriteAttributeString("IDChain", boeChainId)
