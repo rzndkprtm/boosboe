@@ -208,7 +208,7 @@ Partial Class Setting
             Dim companyName As String = settingClass.GetItemData("SELECT Name FROM Companys WHERE Id='" & companyId & "'")
             If companyId = "3" Then companyName = "PT Bumi Indah Global"
 
-            Dim mailData As DataRow = settingClass.GetDataRow("SELECT * FROM Mailings WHERE CompanyId='" & companyId & "' AND Name='Reset Proforma Order' AND Active=1")
+            Dim mailData As DataRow = settingClass.GetDataRow("SELECT * FROM Mailings WHERE CompanyId='" & companyId & "' AND Name='Reset Proforma Order' AND Status='Active'")
             If mailData Is Nothing Then Exit Sub
 
             Dim mailServer As String = mailData("Server").ToString()

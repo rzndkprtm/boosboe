@@ -581,7 +581,7 @@ Public Class SettingClass
             Dim loginData As DataRow = GetDataRow("SELECT * FROM Logins WHERE Id='" & salesId & "'")
             If loginData Is Nothing Then Exit Sub
 
-            Dim mailData As DataRow = GetDataRow("SELECT * FROM Mailings WHERE CompanyId='2' AND Name='Journal Summary' AND Active=1")
+            Dim mailData As DataRow = GetDataRow("SELECT * FROM Mailings WHERE CompanyId='2' AND Name='Journal Summary' AND Status='Active'")
             If mailData Is Nothing Then Exit Sub
 
             Dim mailServer As String = mailData("Server").ToString()
@@ -701,7 +701,7 @@ Public Class SettingClass
 
     Public Sub JournalReport()
         Try
-            Dim mailData As DataRow = GetDataRow("SELECT * FROM Mailings WHERE CompanyId='2' AND Name='Journal Report' AND Active=1")
+            Dim mailData As DataRow = GetDataRow("SELECT * FROM Mailings WHERE CompanyId='2' AND Name='Journal Report' AND Status='Active'")
             If mailData Is Nothing Then Exit Sub
 
             Dim mailServer As String = mailData("Server").ToString()
