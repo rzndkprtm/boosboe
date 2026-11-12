@@ -1,0 +1,29 @@
+﻿git update-index --assume-unchanged Web.config
+git update-index --no-assume-unchanged Web.config
+
+https://github.com/rzndkprtm/boosproject
+
+BIGBLINDS
+
+https://swh7.conetix.com.au:8443/
+User : ordersbl
+Password : ramin41mta
+
+no-reply@ordersblindonline.com
+fq95P~38o
+
+FTP
+IP : 202.74.70.10
+User : bigblinds
+Password : 4Y_xv&nbC4Hw3fio
+
+088212742812
+
+Face Fit = Outside
+Reveal Fit = Inside
+
+SELECT CustomerId, COUNT(*) AS Total
+FROM CustomerDiscounts
+WHERE Discount1 % 1 <> 0
+GROUP BY CustomerId
+ORDER BY CustomerId
