@@ -614,8 +614,8 @@ Public Class SettingClass
             Dim mailBody As String = String.Empty
 
             Dim today As Date = Date.Today
-            Dim startDate As Date = today.AddDays(-(CInt(today.DayOfWeek) + 6) Mod 7)
-            Dim endDate As Date = startDate.AddDays(4)
+            Dim startDate As Date = today.AddDays(1 - CInt(today.DayOfWeek) - 7)
+            Dim endDate As Date = startDate.AddDays(6)
 
             Dim period As String = startDate.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & " - " & endDate.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)
 
@@ -727,8 +727,8 @@ Public Class SettingClass
             Dim mailBody As String = String.Empty
 
             Dim today As Date = Date.Today
-            Dim startDate As Date = today.AddDays(-(CInt(today.DayOfWeek) + 6) Mod 7)
-            Dim endDate As Date = startDate.AddDays(4)
+            Dim startDate As Date = today.AddDays(1 - CInt(today.DayOfWeek) - 7)
+            Dim endDate As Date = startDate.AddDays(6)
 
             Dim period As String = startDate.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & " - " & endDate.ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)
 
