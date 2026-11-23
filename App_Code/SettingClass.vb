@@ -464,8 +464,8 @@ Public Class SettingClass
         Try
             Using ms As New MemoryStream()
                 Dim salesName As String = "ALL SALES"
-
                 Dim pageTitle As String = "JOURNAL REPORT"
+
                 Dim doc As New Document(PageSize.A4.Rotate(), 25, 25, 125, 55)
                 Dim writer As PdfWriter = PdfWriter.GetInstance(doc, ms)
 
@@ -479,78 +479,126 @@ Public Class SettingClass
                 writer.PageEvent = pageEvent
                 doc.Open()
 
-                Dim table As New PdfPTable(5)
-                table.WidthPercentage = 100
-                table.SetWidths(New Single() {0.2F, 0.14F, 0.15F, 0.23F, 0.28F})
-                table.HeaderRows = 1
-                table.SplitLate = False
-                table.KeepTogether = False
-                table.SpacingBefore = 5
-                table.SpacingAfter = 5
-
                 Dim headerFont As New Font(Font.FontFamily.HELVETICA, 8, Font.BOLD, BaseColor.WHITE)
                 Dim bodyFont As New Font(Font.FontFamily.HELVETICA, 8, Font.NORMAL, New BaseColor(51, 65, 85))
                 Dim emptyFont As New Font(Font.FontFamily.HELVETICA, 9, Font.ITALIC, New BaseColor(107, 114, 128))
+                Dim salesFont As New Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, New BaseColor(23, 74, 117))
+
                 Dim headerBackground As New BaseColor(36, 52, 71)
                 Dim alternateBackground As New BaseColor(248, 250, 252)
                 Dim borderColor As New BaseColor(226, 232, 240)
+                Dim salesBackground As New BaseColor(232, 241, 250)
+                Dim salesBorder As New BaseColor(0, 112, 192)
 
                 Dim headers As String() = {"SALES NAME", "JOURNAL DATE", "ACTIVITY", "CUSTOMER NAME", "DESCRIPTION"}
-
-                For Each header As String In headers
-                    Dim cell As New PdfPCell(New Phrase(header, headerFont))
-                    cell.BackgroundColor = headerBackground
-                    cell.HorizontalAlignment = Element.ALIGN_CENTER
-                    cell.VerticalAlignment = Element.ALIGN_MIDDLE
-                    cell.PaddingTop = 9
-                    cell.PaddingBottom = 9
-                    cell.PaddingLeft = 5
-                    cell.PaddingRight = 5
-                    cell.BorderColor = borderColor
-                    cell.BorderWidth = 0.5F
-                    cell.Border = Rectangle.BOX
-                    table.AddCell(cell)
-                Next
 
                 Dim thisData As DataTable = GetDataTableSP("sp_Journals_Report", Nothing)
 
                 If thisData.Rows.Count > 0 Then
-                    For i As Integer = 0 To thisData.Rows.Count - 1
-                        Dim row As DataRow = thisData.Rows(i)
+                    ' GET DISTINCT SALES
+                    Dim salesData As DataTable = thisData.DefaultView.ToTable(True, "CreatedBy", "CreatedByFull")
 
-                        Dim createdBy As String = If(IsDBNull(row("CreatedByFull")), "", row("CreatedByFull").ToString())
-                        Dim createdDate As String = Convert.ToDateTime(row("CreatedDate")).ToString("dd MMM yyyy")
-                        Dim activity As String = If(IsDBNull(row("Activity")), "", row("Activity").ToString())
-                        Dim customerName As String = If(IsDBNull(row("CustomerName")), "", row("CustomerName").ToString())
-                        Dim description As String = If(IsDBNull(row("Description")), "", row("Description").ToString())
+                    For Each salesRow As DataRow In salesData.Rows
 
-                        Dim rowBackground As BaseColor = If(i Mod 2 = 0, BaseColor.WHITE, alternateBackground)
-                        Dim values As String() = {createdBy, createdDate, activity, customerName, description}
+                        Dim salesId As Integer = Convert.ToInt32(salesRow("CreatedBy"))
+                        Dim currentSalesName As String = salesRow("CreatedByFull").ToString()
 
-                        For col As Integer = 0 To values.Length - 1
-                            Dim cell As New PdfPCell(New Phrase(If(String.IsNullOrWhiteSpace(values(col)), "-", values(col)), bodyFont))
-                            cell.BackgroundColor = rowBackground
+                        Dim salesRows() As DataRow = thisData.Select("CreatedBy = " & salesId)
+
+                        ' SALES TABLE
+                        Dim table As New PdfPTable(5)
+                        table.WidthPercentage = 100
+                        table.SetWidths(New Single() {0.2F, 0.14F, 0.15F, 0.23F, 0.28F})
+                        table.HeaderRows = 2
+                        table.SplitLate = False
+                        table.KeepTogether = False
+                        table.SpacingBefore = 10
+                        table.SpacingAfter = 10
+
+                        ' SALES TITLE
+                        Dim salesCell As New PdfPCell(New Phrase("SALES: " & currentSalesName.ToUpper(), salesFont))
+                        salesCell.Colspan = 5
+                        salesCell.BackgroundColor = salesBackground
+                        salesCell.BorderColor = salesBorder
+                        salesCell.BorderWidth = 0.8F
+                        salesCell.BorderWidthLeft = 3.0F
+                        salesCell.HorizontalAlignment = Element.ALIGN_LEFT
+                        salesCell.VerticalAlignment = Element.ALIGN_MIDDLE
+                        salesCell.PaddingTop = 8
+                        salesCell.PaddingBottom = 8
+                        salesCell.PaddingLeft = 10
+                        salesCell.PaddingRight = 6
+                        table.AddCell(salesCell)
+
+                        ' TABLE HEADER
+                        For Each header As String In headers
+
+                            Dim cell As New PdfPCell(New Phrase(header, headerFont))
+                            cell.BackgroundColor = headerBackground
+                            cell.HorizontalAlignment = Element.ALIGN_CENTER
                             cell.VerticalAlignment = Element.ALIGN_MIDDLE
-                            cell.PaddingTop = 7
-                            cell.PaddingBottom = 7
-                            cell.PaddingLeft = 6
-                            cell.PaddingRight = 6
+                            cell.PaddingTop = 9
+                            cell.PaddingBottom = 9
+                            cell.PaddingLeft = 5
+                            cell.PaddingRight = 5
                             cell.BorderColor = borderColor
                             cell.BorderWidth = 0.5F
                             cell.Border = Rectangle.BOX
 
-                            If col = 0 OrElse col = 1 OrElse col = 2 Then
-                                cell.HorizontalAlignment = Element.ALIGN_CENTER
-                            Else
-                                cell.HorizontalAlignment = Element.ALIGN_LEFT
-                            End If
-
                             table.AddCell(cell)
                         Next
+
+                        ' TABLE BODY
+                        Dim rowIndex As Integer = 0
+
+                        For Each row As DataRow In salesRows
+                            Dim createdBy As String = If(IsDBNull(row("CreatedByFull")), "", row("CreatedByFull").ToString())
+                            Dim createdDate As String = Convert.ToDateTime(row("CreatedDate")).ToString("dd MMM yyyy")
+                            Dim activity As String = If(IsDBNull(row("Activity")), "", row("Activity").ToString())
+                            Dim customerName As String = If(IsDBNull(row("CustomerName")), "", row("CustomerName").ToString())
+                            Dim description As String = If(IsDBNull(row("Description")), "", row("Description").ToString())
+
+                            Dim rowBackground As BaseColor = If(rowIndex Mod 2 = 0, BaseColor.WHITE, alternateBackground)
+
+                            Dim values As String() = {
+                                createdBy,
+                                createdDate,
+                                activity,
+                                customerName,
+                                description
+                            }
+
+                            For col As Integer = 0 To values.Length - 1
+                                Dim cell As New PdfPCell(New Phrase(If(String.IsNullOrWhiteSpace(values(col)), "-", values(col)), bodyFont))
+
+                                cell.BackgroundColor = rowBackground
+                                cell.VerticalAlignment = Element.ALIGN_MIDDLE
+                                cell.PaddingTop = 7
+                                cell.PaddingBottom = 7
+                                cell.PaddingLeft = 6
+                                cell.PaddingRight = 6
+                                cell.BorderColor = borderColor
+                                cell.BorderWidth = 0.5F
+                                cell.Border = Rectangle.BOX
+
+                                If col = 0 OrElse col = 1 OrElse col = 2 Then
+                                    cell.HorizontalAlignment = Element.ALIGN_CENTER
+                                Else
+                                    cell.HorizontalAlignment = Element.ALIGN_LEFT
+                                End If
+
+                                table.AddCell(cell)
+                            Next
+
+                            rowIndex += 1
+                        Next
+                        doc.Add(table)
                     Next
                 Else
+                    Dim emptyTable As New PdfPTable(1)
+                    emptyTable.WidthPercentage = 100
+
                     Dim emptyCell As New PdfPCell(New Phrase("No journal records found for the selected period.", emptyFont))
-                    emptyCell.Colspan = 5
                     emptyCell.HorizontalAlignment = Element.ALIGN_CENTER
                     emptyCell.VerticalAlignment = Element.ALIGN_MIDDLE
                     emptyCell.PaddingTop = 18
@@ -558,16 +606,16 @@ Public Class SettingClass
                     emptyCell.BackgroundColor = alternateBackground
                     emptyCell.BorderColor = borderColor
                     emptyCell.BorderWidth = 0.5F
-                    table.AddCell(emptyCell)
-                End If
 
-                doc.Add(table)
+                    emptyTable.AddCell(emptyCell)
+                    doc.Add(emptyTable)
+                End If
                 doc.Close()
 
                 Return ms.ToArray()
             End Using
         Catch ex As Exception
-            System.Diagnostics.Debug.WriteLine("JournalSummary_PDF Error: " & ex.ToString())
+            System.Diagnostics.Debug.WriteLine("JournalReport_PDF Error: " & ex.ToString())
             Return New Byte() {}
         End Try
     End Function
@@ -738,35 +786,60 @@ Public Class SettingClass
             mailBody &= "</div>"
             mailBody &= "<br />"
 
-            mailBody &= "<table style='border-collapse:collapse; width:100%; font-family:Cambria; font-size:16px;'>"
-            mailBody &= "<tr style='background-color:#00B0F0; color:black; font-weight:bold; text-align:center;'>"
-            mailBody &= "<th style='border:1px solid #000; padding:6px;'>No</th>"
-            mailBody &= "<th style='border:1px solid #000; padding:6px;'>Journal Date</th>"
-            mailBody &= "<th style='border:1px solid #000; padding:6px;'>Sales Name</th>"
-            mailBody &= "<th style='border:1px solid #000; padding:6px;'>Activity</th>"
-            mailBody &= "<th style='border:1px solid #000; padding:6px;'>Customer</th>"
-            mailBody &= "<th style='border:1px solid #000; padding:6px;'>Total Customer</th>"
-            mailBody &= "</tr>"
+            ' GROUP BY SALES
+            Dim salesData As DataTable = journalData.DefaultView.ToTable(True, "CreatedBy", "FullName")
 
-            Dim no As Integer = 1
-            For i As Integer = 0 To journalData.Rows.Count - 1
+            For Each salesRow As DataRow In salesData.Rows
+
+                Dim salesId As Integer = Convert.ToInt32(salesRow("CreatedBy"))
+                Dim salesRows() As DataRow = journalData.Select("CreatedBy = " & salesId)
+
+                mailBody &= "<table cellpadding='0' cellspacing='0' style='border-collapse:collapse; width:100%; margin:15px 0 8px 0;'>"
                 mailBody &= "<tr>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & no & "</td>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & Convert.ToDateTime(journalData.Rows(i)("JournalDate")).ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & "</td>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("FullName").ToString() & "</td>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Activity").ToString() & "</td>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px;'>" & journalData.Rows(i)("CustomerName").ToString() & "</td>"
-                mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & journalData.Rows(i)("Total").ToString() & "</td>"
+                mailBody &= "<td style='background-color:#E8F1FA; border-left:5px solid #0070C0; padding:8px 12px; font-family:Cambria; font-size:16px; font-weight:bold; color:#174A75;'>"
+                mailBody &= "SALES: " & System.Web.HttpUtility.HtmlEncode(salesRow("FullName").ToString()).ToUpper()
+                mailBody &= "</td>"
                 mailBody &= "</tr>"
-                no += 1
+                mailBody &= "</table>"
+
+                ' TABLE
+                mailBody &= "<table style='border-collapse:collapse; width:100%; font-family:Cambria; font-size:16px;'>"
+
+                ' HEADER
+                mailBody &= "<tr style='background-color:#00B0F0; color:black; font-weight:bold; text-align:center;'>"
+                mailBody &= "<th style='border:1px solid #000; padding:6px;'>No</th>"
+                mailBody &= "<th style='border:1px solid #000; padding:6px;'>Journal Date</th>"
+                mailBody &= "<th style='border:1px solid #000; padding:6px;'>Sales Name</th>"
+                mailBody &= "<th style='border:1px solid #000; padding:6px;'>Activity</th>"
+                mailBody &= "<th style='border:1px solid #000; padding:6px;'>Customer</th>"
+                mailBody &= "<th style='border:1px solid #000; padding:6px;'>Total Customer</th>"
+                mailBody &= "</tr>"
+
+                Dim no As Integer = 1
+
+                For Each row As DataRow In salesRows
+                    mailBody &= "<tr>"
+
+                    mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & no & "</td>"
+                    mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & Convert.ToDateTime(row("JournalDate")).ToString("dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture) & "</td>"
+                    mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & System.Web.HttpUtility.HtmlEncode(row("FullName").ToString()) & "</td>"
+                    mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & System.Web.HttpUtility.HtmlEncode(row("Activity").ToString()) & "</td>"
+                    mailBody &= "<td style='border:1px solid #000; padding:6px;'>" & System.Web.HttpUtility.HtmlEncode(row("CustomerName").ToString()) & "</td>"
+                    mailBody &= "<td style='border:1px solid #000; padding:6px; text-align:center;'>" & row("Total").ToString() & "</td>"
+                    mailBody &= "</tr>"
+
+                    no += 1
+                Next
+
+                mailBody &= "</table>"
+                mailBody &= "<br /><br />"
             Next
-            mailBody &= "</table>"
 
+            ' SIGNATURE
+            mailBody &= "<br /><br />"
+            mailBody &= "<span style='font-family:Cambria; font-size:16px;'>Kind Regards,</span>"
             mailBody &= "<br /><br /><br />"
-
-            mailBody &= "<span style='font-family: Cambria; font-size:16px;'>Kind Regards,</span>"
-            mailBody &= "<br /><br /><br />"
-            mailBody &= "<span style='font-family: Cambria; font-size:16px; font-weight: bold;'>Reza Andika Pratama</span>"
+            mailBody &= "<span style='font-family:Cambria; font-size:16px; font-weight:bold;'>Reza Andika Pratama</span>"
 
             Dim myMail As New MailMessage()
             myMail.Subject = String.Format("JOURNAL REPORT")
