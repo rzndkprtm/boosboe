@@ -504,7 +504,7 @@
 
                 Dim valanceOption As String = thisData("ValanceOption").ToString()
                 If valanceOption = "Cover Valance and Cord at Front" Then valanceOption = "Cover Valance"
-                If valanceOption = "No Cover Valance and Cord at Back" Then valanceOption = "No Cover Valance"
+                If valanceOption = "Cover Valance and Cord at Front" Then valanceOption = "Cover Valance"
 
                 writer.WriteStartElement("OrderDetails")
                 writer.WriteAttributeString("OrddID", thisData("Id").ToString())
